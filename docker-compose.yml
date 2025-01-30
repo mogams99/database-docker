@@ -1,33 +1,42 @@
 services:
   mariadb:
+    container_name: ${MARIADB_CONTAINER_NAME}
     image: mariadb:10.11
     environment:
-      MARIADB_ROOT_PASSWORD: root
-      MARIADB_USER: mogams99
-      MARIADB_PASSWORD: tester777
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./mariadb/init.sql.template:/docker-entrypoint-initdb.d/init.sql.template
+      - ./mariadb/generate-init.sh:/docker-entrypoint-initdb.d/generate-init.sh
     ports:
       - "3306:3306"
     networks:
-      - db_network
+      - database-docker-network
+    entrypoint: ["/bin/sh", "/docker-entrypoint-initdb.d/generate-init.sh"]
 
   postgres:
+    container_name: ${POSTGRES_CONTAINER_NAME}
     image: postgres:13
     environment:
-      POSTGRES_USER: mogams99
-      POSTGRES_PASSWORD: tester777
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - db_network
+      - database-docker-network
 
 volumes:
   mariadb_data:
+    name: ${MARIADB_VOLUME}  # Menggunakan variabel dari .env
   postgres_data:
+    name: ${POSTGRES_VOLUME}  # Menggunakan variabel dari .env
 
 networks:
-  db_network:
+  database-docker-network:
     driver: bridge
+    name: ${DATABASE_NETWORK}
